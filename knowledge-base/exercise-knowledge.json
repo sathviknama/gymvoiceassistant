@@ -1,0 +1,371 @@
+{
+  "muscles": {
+    "chest": {
+      "parts": ["upper chest", "mid chest", "lower chest", "inner chest", "clavicular", "sternal"],
+      "exercises": [
+        {
+          "name": "barbell bench press",
+          "targets": ["mid chest"],
+          "secondary": ["front delts", "triceps"],
+          "notes": "Max strength, overload potential, mass building."
+        },
+        {
+          "name": "incline dumbbell press",
+          "targets": ["upper chest"],
+          "secondary": ["front delts", "triceps"],
+          "notes": "Upper chest development, shoulder balance, unilateral control."
+        },
+        {
+          "name": "decline press",
+          "targets": ["lower chest"],
+          "secondary": ["triceps", "front delts"],
+          "notes": "Lower chest emphasis, pressing strength."
+        },
+        {
+          "name": "dip",
+          "targets": ["lower chest", "mid chest"],
+          "secondary": ["triceps", "front delts"],
+          "notes": "Lean forward to bias chest; vertical torso biases triceps."
+        },
+        {
+          "name": "chest fly",
+          "targets": ["inner chest", "mid chest"],
+          "secondary": ["front delts"],
+          "notes": "Isolation, strong pec squeeze."
+        },
+        {
+          "name": "cable fly",
+          "targets": ["inner chest", "lower chest", "upper chest"],
+          "secondary": ["front delts"],
+          "notes": "Constant tension; angle sets upper vs lower bias."
+        }
+      ]
+    },
+    "back": {
+      "parts": ["lats", "traps", "rhomboids", "erectors", "rear delts", "upper back", "mid back", "lower back"],
+      "exercises": [
+        {
+          "name": "pull-up",
+          "targets": ["lats", "upper back"],
+          "secondary": ["biceps", "grip"],
+          "notes": "Relative strength, back width, grip."
+        },
+        {
+          "name": "chin-up",
+          "targets": ["lats", "upper back"],
+          "secondary": ["biceps"],
+          "notes": "Supinated grip; often more biceps than pull-up."
+        },
+        {
+          "name": "barbell row",
+          "targets": ["mid back", "lats"],
+          "secondary": ["erectors", "biceps"],
+          "notes": "Thickness, posture, pulling strength."
+        },
+        {
+          "name": "seated cable row",
+          "targets": ["mid back", "rhomboids"],
+          "secondary": ["lats", "biceps"],
+          "notes": "Controlled hypertrophy, scapular retraction."
+        },
+        {
+          "name": "deadlift",
+          "targets": ["erectors", "traps", "lats"],
+          "secondary": ["glutes", "hamstrings"],
+          "notes": "Total-body strength, hinge power, posterior chain."
+        },
+        {
+          "name": "straight-arm pulldown",
+          "targets": ["lats"],
+          "secondary": ["triceps long head"],
+          "notes": "Isolation, lat activation in lengthened range."
+        },
+        {
+          "name": "lat pulldown",
+          "targets": ["lats", "upper back"],
+          "secondary": ["biceps"],
+          "notes": "Width and vertical pull strength."
+        },
+        {
+          "name": "face pull",
+          "targets": ["rear delts", "mid traps"],
+          "secondary": ["rotator cuff"],
+          "notes": "Shoulder health, upper-back balance."
+        }
+      ]
+    },
+    "shoulders": {
+      "parts": ["front delts", "side delts", "rear delts", "deltoids"],
+      "exercises": [
+        {
+          "name": "overhead press",
+          "targets": ["front delts", "side delts"],
+          "secondary": ["triceps", "upper chest"],
+          "notes": "Pressing strength, shoulder mass."
+        },
+        {
+          "name": "lateral raise",
+          "targets": ["side delts"],
+          "secondary": ["traps"],
+          "notes": "Shoulder width, aesthetics."
+        },
+        {
+          "name": "rear delt fly",
+          "targets": ["rear delts"],
+          "secondary": ["mid traps"],
+          "notes": "Posture, shoulder balance."
+        },
+        {
+          "name": "arnold press",
+          "targets": ["front delts", "side delts"],
+          "secondary": ["triceps"],
+          "notes": "Range of motion, hypertrophy."
+        }
+      ]
+    },
+    "biceps": {
+      "parts": ["long head", "short head", "brachialis", "brachioradialis"],
+      "exercises": [
+        {
+          "name": "barbell curl",
+          "targets": ["short head", "long head"],
+          "secondary": ["brachialis"],
+          "notes": "Overall biceps strength and size."
+        },
+        {
+          "name": "incline dumbbell curl",
+          "targets": ["long head"],
+          "secondary": ["short head"],
+          "notes": "Peak emphasis, stretch stimulus."
+        },
+        {
+          "name": "preacher curl",
+          "targets": ["short head"],
+          "secondary": ["brachialis"],
+          "notes": "Isolation, reduced cheating."
+        },
+        {
+          "name": "hammer curl",
+          "targets": ["brachialis", "brachioradialis"],
+          "secondary": ["long head"],
+          "notes": "Arm thickness, forearm carryover."
+        },
+        {
+          "name": "dumbbell bicep curl",
+          "targets": ["short head", "long head"],
+          "secondary": ["brachialis"],
+          "notes": "Solid general builder."
+        }
+      ]
+    },
+    "triceps": {
+      "parts": ["long head", "lateral head", "medial head"],
+      "exercises": [
+        {
+          "name": "close-grip bench press",
+          "targets": ["triceps"],
+          "secondary": ["chest", "front delts"],
+          "notes": "Strength, compound overload for arms."
+        },
+        {
+          "name": "overhead tricep extension",
+          "targets": ["long head"],
+          "secondary": ["lateral head"],
+          "notes": "Stretch-mediated growth for long head."
+        },
+        {
+          "name": "cable pushdown",
+          "targets": ["lateral head", "medial head"],
+          "secondary": ["long head"],
+          "notes": "Isolation, elbow-friendly volume."
+        },
+        {
+          "name": "skull crusher",
+          "targets": ["triceps"],
+          "secondary": ["chest"],
+          "notes": "Size and lockout strength."
+        }
+      ]
+    },
+    "legs": {
+      "parts": ["quads", "hamstrings", "glutes", "calves", "quadriceps", "adductors"],
+      "exercises": [
+        {
+          "name": "back squat",
+          "targets": ["quads", "glutes"],
+          "secondary": ["core", "erectors"],
+          "notes": "Total lower-body strength."
+        },
+        {
+          "name": "front squat",
+          "targets": ["quads"],
+          "secondary": ["glutes", "core"],
+          "notes": "Upright torso, quad emphasis."
+        },
+        {
+          "name": "leg press",
+          "targets": ["quads", "glutes"],
+          "secondary": ["hamstrings"],
+          "notes": "High volume safely; stance shifts quad vs glute bias."
+        },
+        {
+          "name": "leg extension",
+          "targets": ["quads"],
+          "secondary": [],
+          "notes": "Quad isolation, detail work."
+        },
+        {
+          "name": "romanian deadlift",
+          "targets": ["hamstrings", "glutes"],
+          "secondary": ["erectors"],
+          "notes": "Hinge strength, posterior chain growth."
+        },
+        {
+          "name": "leg curl",
+          "targets": ["hamstrings"],
+          "secondary": [],
+          "notes": "Knee-flexion role of hamstrings; prehab support."
+        },
+        {
+          "name": "hip thrust",
+          "targets": ["glutes"],
+          "secondary": ["hamstrings"],
+          "notes": "Hip extension power, glute growth."
+        },
+        {
+          "name": "bulgarian split squat",
+          "targets": ["glutes", "quads"],
+          "secondary": ["hamstrings"],
+          "notes": "Unilateral balance, athleticism."
+        },
+        {
+          "name": "walking lunge",
+          "targets": ["glutes", "quads"],
+          "secondary": ["adductors"],
+          "notes": "Coordination, conditioning."
+        },
+        {
+          "name": "standing calf raise",
+          "targets": ["calves"],
+          "secondary": [],
+          "notes": "Gastroc emphasis; jumping and ankle strength."
+        },
+        {
+          "name": "seated calf raise",
+          "targets": ["calves"],
+          "secondary": [],
+          "notes": "Soleus emphasis; lower-leg endurance."
+        }
+      ]
+    },
+    "core": {
+      "parts": ["rectus abdominis", "obliques", "transverse abdominis", "lower back stabilizers"],
+      "exercises": [
+        {
+          "name": "plank",
+          "targets": ["transverse abdominis", "rectus abdominis"],
+          "secondary": [],
+          "notes": "Bracing, spine support."
+        },
+        {
+          "name": "hanging leg raise",
+          "targets": ["rectus abdominis"],
+          "secondary": ["hip flexors"],
+          "notes": "Trunk control."
+        },
+        {
+          "name": "cable crunch",
+          "targets": ["rectus abdominis"],
+          "secondary": [],
+          "notes": "Loaded ab training."
+        },
+        {
+          "name": "russian twist",
+          "targets": ["obliques"],
+          "secondary": [],
+          "notes": "Rotational control."
+        },
+        {
+          "name": "back extension",
+          "targets": ["erectors", "glutes"],
+          "secondary": [],
+          "notes": "Posterior trunk endurance."
+        }
+      ]
+    },
+    "forearms": {
+      "parts": ["grip", "forearm flexors", "forearm extensors"],
+      "exercises": [
+        {
+          "name": "farmer carry",
+          "targets": ["grip", "traps"],
+          "secondary": ["core"],
+          "notes": "Real-world strength, conditioning."
+        },
+        {
+          "name": "wrist curl",
+          "targets": ["forearm flexors"],
+          "secondary": [],
+          "notes": "Elbow resilience, grip support."
+        }
+      ]
+    }
+  },
+  "guide_sections": [
+    {
+      "title": "Overview",
+      "keywords": ["overview", "guide", "reference", "muscle groups", "training design", "full body"],
+      "content": "This knowledge base maps major muscle groups to regions, example exercises, targets, and benefits. Use it for exercise selection, balance, and progression. Progressive overload drives adaptation. Use full ROM where pain-free. Balance push/pull and quad/hinge patterns."
+    },
+    {
+      "title": "Chest (Pectorals)",
+      "keywords": ["chest", "pectoral", "pec", "bench", "fly", "dip", "upper chest", "lower chest", "clavicular", "incline", "decline", "cable fly"],
+      "content": "Regions: upper chest (clavicular head), mid chest (sternal), lower chest (costal). Barbell bench press targets mid chest, front delts, triceps — max strength and mass. Incline dumbbell press biases upper chest. Decline press and forward-leaning dips emphasize lower chest. Cable fly offers constant tension and angle control for hypertrophy and mind-muscle connection."
+    },
+    {
+      "title": "Back",
+      "keywords": ["back", "lats", "pull", "row", "deadlift", "trap", "rhomboid", "erector", "pull-up", "chin", "pulldown", "face pull"],
+      "content": "Regions: lats (width), mid traps/rhomboids (thickness), lower traps, spinal erectors, rear delts/teres. Pull-up/chin-up build lats, upper back, and grip. Barbell row hits mid back and lats. Seated cable row suits controlled hypertrophy and retraction. Deadlift trains the whole posterior chain. Straight-arm pulldown isolates lats in a lengthened position."
+    },
+    {
+      "title": "Shoulders",
+      "keywords": ["shoulder", "delt", "overhead", "lateral raise", "rear delt", "arnold", "press", "side delt"],
+      "content": "Regions: front, side, and rear delts. Overhead press builds pressing strength and mass. Lateral raises target side delts for width. Rear delt fly supports posture and balance. Arnold press adds ROM and hypertrophy stimulus."
+    },
+    {
+      "title": "Arms — Biceps and Triceps",
+      "keywords": ["arm", "bicep", "tricep", "curl", "pushdown", "skull", "hammer", "preacher", "long head", "brachialis"],
+      "content": "Biceps: long head (outer peak), short head (inner thickness), brachialis. Barbell curl for overall size; incline curl for long head stretch; preacher for short-head isolation; hammer for brachialis and forearms. Triceps: long, lateral, medial heads. Close-grip bench for overload; overhead extension for long head; pushdowns for lateral/medial isolation; skullcrushers for overall triceps mass and lockout."
+    },
+    {
+      "title": "Legs",
+      "keywords": ["leg", "quad", "hamstring", "glute", "squat", "rdl", "lunge", "leg press", "extension", "curl", "hip thrust"],
+      "content": "Quads: rectus femoris and vastii — back squat and front squat for strength; leg press for volume; leg extension for isolation. Hamstrings: RDL and leg curl for hinge and knee-flexion roles. Glutes: hip thrust, Bulgarian split squat, walking lunge. Calves: standing vs seated raises for gastroc vs soleus."
+    },
+    {
+      "title": "Calves",
+      "keywords": ["calf", "calves", "soleus", "gastroc", "gastrocnemius", "lower leg", "ankle", "tibialis"],
+      "content": "Standing calf raises (knee straight) emphasize gastrocnemius. Seated calf raises (knee bent) bias soleus. For balance, consider light tibialis anterior work (e.g., tib raises) if needed."
+    },
+    {
+      "title": "Core and trunk",
+      "keywords": ["core", "ab", "oblique", "plank", "crunch", "six pack", "stability", "brace"],
+      "content": "Regions include rectus abdominis, obliques, transverse abdominis, and lumbar stabilizers. Plank trains bracing; hanging leg raises challenge flexion control; cable crunch loads the rectus; Russian twists hit rotation; back extensions support erectors and glutes."
+    },
+    {
+      "title": "Forearms and grip",
+      "keywords": ["forearm", "grip", "wrist", "carry", "farmer"],
+      "content": "Farmer carries build grip, traps, and core. Wrist curls and reverse wrist curls train flexors and extensors for elbow resilience and grip support."
+    },
+    {
+      "title": "Programming",
+      "keywords": ["program", "reps", "sets", "rest", "hypertrophy", "strength", "endurance", "volume", "progressive overload", "rpe", "rom"],
+      "content": "Strength focus: about 3–6 reps, longer rests. Hypertrophy: about 6–15 reps, moderate rests. Endurance: 15+ reps. Progressive overload drives adaptation. Use full ROM where pain-free. Balance push/pull and squat/hinge patterns."
+    },
+    {
+      "title": "Goals — quick reference",
+      "keywords": ["build size", "build strength", "posture", "fat loss", "goal", "muscle mass", "conditioning"],
+      "content": "Build size: bench, rows, squats, presses, curls, pushdowns, leg press. Build strength: squat, deadlift, bench, overhead press, pull-up. Improve posture: rows, rear delt fly, face pull, planks, RDL. Fat loss: prioritize compounds, walking, and nutrition adherence."
+    }
+  ]
+}

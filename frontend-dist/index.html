@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jarvis Gym</title>
+    <script type="module" crossorigin src="/assets/index-Oe6LeJaF.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-CZNvIKb-.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="phone">
+        <header class="topbar">
+          <h1>Jarvis</h1>
+          <p>Voice-first gym assistant</p>
+        </header>
+
+        <div class="phone-screen">
+          <section id="pageHome" class="page page-scroll hidden">
+            <div class="hero hero-compact">
+              <h2>Your training</h2>
+              <p>Every completed workout, newest first.</p>
+            </div>
+            <div id="homeWorkoutFeed" class="feed feed-strava"></div>
+            <p id="homeFeedEmpty" class="feed-empty hidden">No workouts yet. Start one from the Trainer tab.</p>
+          </section>
+
+          <section id="pageWorkout" class="page page-scroll page-workout hidden">
+            <div class="hero hero-compact workout-hero">
+              <h2>Exercise plan</h2>
+              <p>Pick three go-to moves per muscle. Saved plans load when you start a workout.</p>
+            </div>
+            <div id="workoutMuscleStack" class="muscle-stack"></div>
+            <button id="saveAllPlanBtn" class="btn save-all-btn workout-save-btn" type="button">
+              Save plan
+            </button>
+          </section>
+
+          <section id="pageTrainer" class="page page-trainer page-scroll hidden">
+            <div class="card">
+              <p class="label">Trainer</p>
+              <p id="assistantReply">Jarvis is standing by.</p>
+            </div>
+
+            <textarea id="transcriptInput" placeholder="Speak or type anytime—interrupts Jarvis and answers your new question."></textarea>
+            <button id="sendBtn" class="btn ghost">Send</button>
+
+            <p id="statusText" class="status">Session: Inactive</p>
+            <p id="ttsSourceText" class="status subtle">TTS: Browser</p>
+            <p id="sttSourceText" class="status subtle">STT: Browser</p>
+            <p id="aiSourceText" class="status subtle">AI: Checking...</p>
+
+            <div class="card">
+              <p class="label">Live Exercise Tracker</p>
+              <div id="trainerExerciseCards" class="exercise-cards"></div>
+            </div>
+          </section>
+        </div>
+
+        <div id="trainerMicDock" class="trainer-mic-dock hidden" aria-hidden="true">
+          <button id="micBtn" class="mic" type="button" aria-label="Hold to speak">
+            <img class="mic-img" src="data:image/svg+xml,%3c?xml%20version='1.0'%20encoding='utf-8'?%3e%3c!--%20Uploaded%20to:%20SVG%20Repo,%20www.svgrepo.com,%20Generator:%20SVG%20Repo%20Mixer%20Tools%20--%3e%3csvg%20fill='%23000000'%20width='800px'%20height='800px'%20viewBox='0%200%201920%201920'%20xmlns='http://www.w3.org/2000/svg'%3e%3cpath%20d='M425.818%20709.983V943.41c0%20293.551%20238.946%20532.497%20532.497%20532.497%20293.55%200%20532.496-238.946%20532.496-532.497V709.983h96.818V943.41c0%20330.707-256.438%20602.668-580.9%20627.471l-.006%20252.301h242.044V1920H667.862v-96.818h242.043l-.004-252.3C585.438%201546.077%20329%201274.116%20329%20943.41V709.983h96.818ZM958.315%200c240.204%200%20435.679%20195.475%20435.679%20435.68v484.087c0%20240.205-195.475%20435.68-435.68%20435.68-240.204%200-435.679-195.475-435.679-435.68V435.68C522.635%20195.475%20718.11%200%20958.315%200Z'%20fill-rule='evenodd'/%3e%3c/svg%3e" alt="" width="32" height="32" />
+          </button>
+        </div>
+
+        <footer class="nav">
+          <button id="tabHome" class="tab active" type="button">
+            <img class="nav-icon" src="data:image/svg+xml,%3c?xml%20version='1.0'%20encoding='utf-8'?%3e%3c!--%20Uploaded%20to:%20SVG%20Repo,%20www.svgrepo.com,%20Generator:%20SVG%20Repo%20Mixer%20Tools%20--%3e%3csvg%20width='800px'%20height='800px'%20viewBox='0%200%2016%2016'%20fill='none'%20xmlns='http://www.w3.org/2000/svg'%3e%3cpath%20d='M1%206V15H6V11C6%209.89543%206.89543%209%208%209C9.10457%209%2010%209.89543%2010%2011V15H15V6L8%200L1%206Z'%20fill='%23000000'/%3e%3c/svg%3e" alt="" width="22" height="22" />
+            <span class="label-text">Home</span>
+          </button>
+          <button id="tabTrainer" class="tab" type="button">
+            <img
+              class="nav-icon"
+              src="data:image/svg+xml,%3c?xml%20version='1.0'%20encoding='utf-8'?%3e%3c!--%20Uploaded%20to:%20SVG%20Repo,%20www.svgrepo.com,%20Generator:%20SVG%20Repo%20Mixer%20Tools%20--%3e%3csvg%20fill='%23000000'%20width='800px'%20height='800px'%20viewBox='0%200%2014%2014'%20role='img'%20focusable='false'%20aria-hidden='true'%20xmlns='http://www.w3.org/2000/svg'%3e%3cpath%20d='m%2011.957805,10.945435%20c%200,0.98672%20-0.799782,1.78652%20-1.786594,1.78652%20-0.9868126,0%20-1.7866172,-0.7998%20-1.7866172,-1.78652%200,-0.98668%200.7997812,-1.78657%201.7866172,-1.78657%200.986812,0%201.786594,0.79989%201.786594,1.78657%20z%20m%20-0.29775,-3.84118%20c%200,0.82222%20-0.666516,1.4888%20-1.488821,1.4888%20-0.8223746,0%20-1.4888434,-0.66658%20-1.4888434,-1.4888%200,-0.82225%200.6664922,-1.48884%201.4888434,-1.48884%200.822328,0%201.488821,0.66661%201.488821,1.48884%20z%20M%2013,5.287865%20c%200,0.41119%20-0.333375,0.74442%20-0.744422,0.74442%20-0.411047,0%20-0.744422,-0.33323%20-0.744422,-0.74442%200,-0.41116%200.333375,-0.74442%200.744422,-0.74442%20C%2012.666625,4.543445%2013,4.876705%2013,5.287865%20Z%20M%208.3250627,4.930565%20A%203.6625315,3.6625315%200%200%201%204.6625315,8.593095%203.6625315,3.6625315%200%200%201%201,4.930575%203.6625315,3.6625315%200%200%201%204.6625315,1.268045%203.6625315,3.6625315%200%200%201%208.3250627,4.930575%20Z'/%3e%3c/svg%3e"
+              alt=""
+              width="22"
+              height="22"
+            />
+            <span class="label-text">Trainer</span>
+          </button>
+          <button id="tabWorkout" class="tab" type="button">
+            <img class="nav-icon" src="data:image/svg+xml,%3c?xml%20version='1.0'%20encoding='utf-8'?%3e%3c!--%20Uploaded%20to:%20SVG%20Repo,%20www.svgrepo.com,%20Generator:%20SVG%20Repo%20Mixer%20Tools%20--%3e%3csvg%20version='1.1'%20id='Icons'%20xmlns='http://www.w3.org/2000/svg'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20viewBox='0%200%2032%2032'%20xml:space='preserve'%3e%3cstyle%20type='text/css'%3e%20.st0{fill:none;stroke:%23000000;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;}%20%3c/style%3e%3cg%3e%3cpath%20d='M7,25c-1.7,0-3-1.3-3-3V10c0-1.7,1.3-3,3-3s3,1.3,3,3v12C10,23.7,8.7,25,7,25z'/%3e%3c/g%3e%3cg%3e%3cpath%20d='M25,25c-1.7,0-3-1.3-3-3V10c0-1.7,1.3-3,3-3s3,1.3,3,3v12C28,23.7,26.7,25,25,25z'/%3e%3c/g%3e%3cg%3e%3cpath%20d='M23,17H9c-0.6,0-1-0.4-1-1s0.4-1,1-1h14c0.6,0,1,0.4,1,1S23.6,17,23,17z'/%3e%3c/g%3e%3cg%3e%3cpath%20d='M2,10.2c-1.2,0.4-2,1.5-2,2.8v6c0,1.3,0.8,2.4,2,2.8V10.2z'/%3e%3cpath%20d='M30,10.2v11.6c1.2-0.4,2-1.5,2-2.8v-6C32,11.7,31.2,10.6,30,10.2z'/%3e%3c/g%3e%3c/svg%3e" alt="" width="22" height="22" />
+            <span class="label-text">Workout</span>
+          </button>
+        </footer>
+      </section>
+    </main>
+  </body>
+</html>

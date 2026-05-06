@@ -6,17 +6,28 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "site:dev": "vite --config frontend/vite.config.js",
+    "site:build": "vite build --config frontend/vite.config.js",
+    "site:preview": "vite preview --config frontend/vite.config.js",
+    "backend:dev": "cd backend && uvicorn chat:app --reload --host 127.0.0.1 --port 8000"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "base64-js": "^1.5.1",
     "expo": "~54.0.33",
+    "expo-av": "~16.0.8",
+    "expo-file-system": "~19.0.21",
     "expo-status-bar": "~3.0.9",
     "react": "19.1.0",
-    "react-native": "0.81.5"
+    "react-dom": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-web": "^0.21.0"
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "vite": "^8.0.8"
   },
   "private": true
 }

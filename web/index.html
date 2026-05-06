@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jarvis · Gym</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="phone">
+        <header class="header">
+          <h1>Jarvis</h1>
+          <p>Gym assistant · chest + biceps MVP</p>
+        </header>
+
+        <section id="homeView" class="view">
+          <div class="card">
+            <p class="label">Home</p>
+            <p class="card-title">Usual Exercise Plan</p>
+            <p class="card-subtitle">Pick your default 3 exercises per muscle.</p>
+          </div>
+
+          <div class="plan-grid">
+            <div class="card">
+              <p class="label">Chest</p>
+              <div class="stack">
+                <input id="chest1" class="field" placeholder="Exercise 1" />
+                <input id="chest2" class="field" placeholder="Exercise 2" />
+                <input id="chest3" class="field" placeholder="Exercise 3" />
+              </div>
+            </div>
+            <div class="card">
+              <p class="label">Biceps</p>
+              <div class="stack">
+                <input id="biceps1" class="field" placeholder="Exercise 1" />
+                <input id="biceps2" class="field" placeholder="Exercise 2" />
+                <input id="biceps3" class="field" placeholder="Exercise 3" />
+              </div>
+            </div>
+          </div>
+
+          <button id="savePlanBtn" class="secondary">Save Usual Plan</button>
+
+          <div class="card">
+            <p class="label">Last 7 Days</p>
+            <ul id="weekHistoryList" class="set-list"></ul>
+          </div>
+        </section>
+
+        <section id="workoutView" class="view hidden">
+          <div class="card">
+            <p class="label">Assistant</p>
+            <p id="assistantReply">Jarvis is standing by.</p>
+          </div>
+
+          <textarea id="transcriptInput" placeholder="Your move..."></textarea>
+          <button id="processTypedBtn" class="secondary">Send</button>
+
+          <p id="statusText" class="status">Session: Inactive</p>
+          <p id="ttsSourceText" class="status subtle">TTS: Browser</p>
+
+          <div class="card">
+            <p class="label">Current Session</p>
+            <ul id="sessionExerciseList" class="set-list"></ul>
+          </div>
+
+          <div class="card">
+            <p class="label">Recent Sets</p>
+            <ul id="setList" class="set-list"></ul>
+          </div>
+        </section>
+
+        <footer class="bottom-bar">
+          <button id="tabHomeBtn" class="tab active" type="button">
+            <img class="tab-icon" src="./assets/icons/home-svgrepo-com.svg" alt="" width="22" height="22" />
+            <span class="tab-label">Home</span>
+          </button>
+          <button id="holdToTalkBtn" class="mic-btn" type="button" aria-label="Hold to talk">
+            <img class="mic-icon" src="./assets/icons/mic-svgrepo-com.svg" alt="" width="28" height="28" />
+          </button>
+          <button id="tabWorkoutBtn" class="tab" type="button">
+            <img class="tab-icon" src="./assets/icons/dumbell-fitness-svgrepo-com.svg" alt="" width="22" height="22" />
+            <span class="tab-label">Workout</span>
+          </button>
+        </footer>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jarvis · Gym</title>
+    <script type="module" crossorigin src="/assets/index-Dc_rovCA.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-CJqCIoBG.css">
+  </head>
+  <body>
+    <main class="page">
+      <section class="phone">
+        <header class="header">
+          <h1>Jarvis</h1>
+          <p>Gym assistant · chest + biceps MVP</p>
+        </header>
+
+        <section id="homeView" class="view">
+          <div class="card">
+            <p class="label">Home</p>
+            <p class="card-title">Usual Exercise Plan</p>
+            <p class="card-subtitle">Pick your default 3 exercises per muscle.</p>
+          </div>
+
+          <div class="plan-grid">
+            <div class="card">
+              <p class="label">Chest</p>
+              <div class="stack">
+                <input id="chest1" class="field" placeholder="Exercise 1" />
+                <input id="chest2" class="field" placeholder="Exercise 2" />
+                <input id="chest3" class="field" placeholder="Exercise 3" />
+              </div>
+            </div>
+            <div class="card">
+              <p class="label">Biceps</p>
+              <div class="stack">
+                <input id="biceps1" class="field" placeholder="Exercise 1" />
+                <input id="biceps2" class="field" placeholder="Exercise 2" />
+                <input id="biceps3" class="field" placeholder="Exercise 3" />
+              </div>
+            </div>
+          </div>
+
+          <button id="savePlanBtn" class="secondary">Save Usual Plan</button>
+
+          <div class="card">
+            <p class="label">Last 7 Days</p>
+            <ul id="weekHistoryList" class="set-list"></ul>
+          </div>
+        </section>
+
+        <section id="workoutView" class="view hidden">
+          <div class="card">
+            <p class="label">Assistant</p>
+            <p id="assistantReply">Jarvis is standing by.</p>
+          </div>
+
+          <textarea id="transcriptInput" placeholder="Your move..."></textarea>
+          <button id="processTypedBtn" class="secondary">Send</button>
+
+          <p id="statusText" class="status">Session: Inactive</p>
+          <p id="ttsSourceText" class="status subtle">TTS: Browser</p>
+
+          <div class="card">
+            <p class="label">Current Session</p>
+            <ul id="sessionExerciseList" class="set-list"></ul>
+          </div>
+
+          <div class="card">
+            <p class="label">Recent Sets</p>
+            <ul id="setList" class="set-list"></ul>
+          </div>
+        </section>
+
+        <footer class="bottom-bar">
+          <button id="tabHomeBtn" class="tab active" type="button">
+            <img class="tab-icon" src="data:image/svg+xml,%3c?xml%20version='1.0'%20encoding='utf-8'?%3e%3c!--%20Uploaded%20to:%20SVG%20Repo,%20www.svgrepo.com,%20Generator:%20SVG%20Repo%20Mixer%20Tools%20--%3e%3csvg%20width='800px'%20height='800px'%20viewBox='0%200%2016%2016'%20fill='none'%20xmlns='http://www.w3.org/2000/svg'%3e%3cpath%20d='M1%206V15H6V11C6%209.89543%206.89543%209%208%209C9.10457%209%2010%209.89543%2010%2011V15H15V6L8%200L1%206Z'%20fill='%23000000'/%3e%3c/svg%3e" alt="" width="22" height="22" />
+            <span class="tab-label">Home</span>
+          </button>
+          <button id="holdToTalkBtn" class="mic-btn" type="button" aria-label="Hold to talk">
+            <img class="mic-icon" src="data:image/svg+xml,%3c?xml%20version='1.0'%20encoding='utf-8'?%3e%3c!--%20Uploaded%20to:%20SVG%20Repo,%20www.svgrepo.com,%20Generator:%20SVG%20Repo%20Mixer%20Tools%20--%3e%3csvg%20fill='%23000000'%20width='800px'%20height='800px'%20viewBox='0%200%201920%201920'%20xmlns='http://www.w3.org/2000/svg'%3e%3cpath%20d='M425.818%20709.983V943.41c0%20293.551%20238.946%20532.497%20532.497%20532.497%20293.55%200%20532.496-238.946%20532.496-532.497V709.983h96.818V943.41c0%20330.707-256.438%20602.668-580.9%20627.471l-.006%20252.301h242.044V1920H667.862v-96.818h242.043l-.004-252.3C585.438%201546.077%20329%201274.116%20329%20943.41V709.983h96.818ZM958.315%200c240.204%200%20435.679%20195.475%20435.679%20435.68v484.087c0%20240.205-195.475%20435.68-435.68%20435.68-240.204%200-435.679-195.475-435.679-435.68V435.68C522.635%20195.475%20718.11%200%20958.315%200Z'%20fill-rule='evenodd'/%3e%3c/svg%3e" alt="" width="28" height="28" />
+          </button>
+          <button id="tabWorkoutBtn" class="tab" type="button">
+            <img class="tab-icon" src="data:image/svg+xml,%3c?xml%20version='1.0'%20encoding='utf-8'?%3e%3c!--%20Uploaded%20to:%20SVG%20Repo,%20www.svgrepo.com,%20Generator:%20SVG%20Repo%20Mixer%20Tools%20--%3e%3csvg%20version='1.1'%20id='Icons'%20xmlns='http://www.w3.org/2000/svg'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20viewBox='0%200%2032%2032'%20xml:space='preserve'%3e%3cstyle%20type='text/css'%3e%20.st0{fill:none;stroke:%23000000;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;}%20%3c/style%3e%3cg%3e%3cpath%20d='M7,25c-1.7,0-3-1.3-3-3V10c0-1.7,1.3-3,3-3s3,1.3,3,3v12C10,23.7,8.7,25,7,25z'/%3e%3c/g%3e%3cg%3e%3cpath%20d='M25,25c-1.7,0-3-1.3-3-3V10c0-1.7,1.3-3,3-3s3,1.3,3,3v12C28,23.7,26.7,25,25,25z'/%3e%3c/g%3e%3cg%3e%3cpath%20d='M23,17H9c-0.6,0-1-0.4-1-1s0.4-1,1-1h14c0.6,0,1,0.4,1,1S23.6,17,23,17z'/%3e%3c/g%3e%3cg%3e%3cpath%20d='M2,10.2c-1.2,0.4-2,1.5-2,2.8v6c0,1.3,0.8,2.4,2,2.8V10.2z'/%3e%3cpath%20d='M30,10.2v11.6c1.2-0.4,2-1.5,2-2.8v-6C32,11.7,31.2,10.6,30,10.2z'/%3e%3c/g%3e%3c/svg%3e" alt="" width="22" height="22" />
+            <span class="tab-label">Workout</span>
+          </button>
+        </footer>
+      </section>
+    </main>
+
+  </body>
+</html>

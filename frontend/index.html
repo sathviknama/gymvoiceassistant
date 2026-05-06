@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jarvis Gym</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="phone">
+        <header class="topbar">
+          <h1>Jarvis</h1>
+          <p>Voice-first gym assistant</p>
+        </header>
+
+        <div class="phone-screen">
+          <section id="pageHome" class="page page-scroll hidden">
+            <div class="hero hero-compact">
+              <h2>Your training</h2>
+              <p>Every completed workout, newest first.</p>
+            </div>
+            <div id="homeWorkoutFeed" class="feed feed-strava"></div>
+            <p id="homeFeedEmpty" class="feed-empty hidden">No workouts yet. Start one from the Trainer tab.</p>
+          </section>
+
+          <section id="pageWorkout" class="page page-scroll page-workout hidden">
+            <div class="hero hero-compact workout-hero">
+              <h2>Exercise plan</h2>
+              <p>Pick three go-to moves per muscle. Saved plans load when you start a workout.</p>
+            </div>
+            <div id="workoutMuscleStack" class="muscle-stack"></div>
+            <button id="saveAllPlanBtn" class="btn save-all-btn workout-save-btn" type="button">
+              Save plan
+            </button>
+          </section>
+
+          <section id="pageTrainer" class="page page-trainer page-scroll hidden">
+            <div class="card">
+              <p class="label">Trainer</p>
+              <p id="assistantReply">Jarvis is standing by.</p>
+            </div>
+
+            <textarea id="transcriptInput" placeholder="Speak or type anytime—interrupts Jarvis and answers your new question."></textarea>
+            <button id="sendBtn" class="btn ghost">Send</button>
+
+            <p id="statusText" class="status">Session: Inactive</p>
+            <p id="ttsSourceText" class="status subtle">TTS: Browser</p>
+            <p id="sttSourceText" class="status subtle">STT: Browser</p>
+            <p id="aiSourceText" class="status subtle">AI: Checking...</p>
+
+            <div class="card">
+              <p class="label">Live Exercise Tracker</p>
+              <div id="trainerExerciseCards" class="exercise-cards"></div>
+            </div>
+          </section>
+        </div>
+
+        <div id="trainerMicDock" class="trainer-mic-dock hidden" aria-hidden="true">
+          <button id="micBtn" class="mic" type="button" aria-label="Hold to speak">
+            <img class="mic-img" src="./assets/icons/mic-svgrepo-com.svg" alt="" width="32" height="32" />
+          </button>
+        </div>
+
+        <footer class="nav">
+          <button id="tabHome" class="tab active" type="button">
+            <img class="nav-icon" src="./assets/icons/home-svgrepo-com.svg" alt="" width="22" height="22" />
+            <span class="label-text">Home</span>
+          </button>
+          <button id="tabTrainer" class="tab" type="button">
+            <img
+              class="nav-icon"
+              src="./assets/icons/brand-google-assistant-svgrepo-com.svg"
+              alt=""
+              width="22"
+              height="22"
+            />
+            <span class="label-text">Trainer</span>
+          </button>
+          <button id="tabWorkout" class="tab" type="button">
+            <img class="nav-icon" src="./assets/icons/dumbell-fitness-svgrepo-com.svg" alt="" width="22" height="22" />
+            <span class="label-text">Workout</span>
+          </button>
+        </footer>
+      </section>
+    </main>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
