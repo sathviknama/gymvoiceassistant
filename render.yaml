@@ -1,0 +1,11 @@
+# Render Blueprint — deploy the FastAPI backend from /backend
+# https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: gymvoiceassistant-backend
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn chat:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
