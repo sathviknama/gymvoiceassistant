@@ -1,0 +1,16 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "vite build --config frontend/vite.config.js",
+  "outputDirectory": "frontend-dist",
+  "installCommand": "npm install",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://gymvoiceassistant-1.onrender.com/api/:path*"
+    },
+    {
+      "source": "/health",
+      "destination": "https://gymvoiceassistant-1.onrender.com/health"
+    }
+  ]
+}

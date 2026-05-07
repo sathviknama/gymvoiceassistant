@@ -1593,6 +1593,10 @@ async function transcribeWithDeepgram(blob) {
 }
 
 function sttStreamUrl() {
+  const override = import.meta.env.VITE_BACKEND_WS_URL;
+  if (override) {
+    return `${String(override).replace(/\/$/, "")}${STT_STREAM_PATH}`;
+  }
   const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
   return `${proto}//${window.location.host}${STT_STREAM_PATH}`;
 }
