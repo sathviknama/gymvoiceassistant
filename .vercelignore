@@ -1,0 +1,5 @@
+backend/
+docs/
+knowledge-base/
+render.yaml
+*.md
