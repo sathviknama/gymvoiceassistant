@@ -1,5 +1,6 @@
 import json
 import os
+import random
 import re
 import asyncio
 from pathlib import Path
@@ -809,14 +810,21 @@ def _t_muscles_chosen(p):
   label = _natlist(p.get("muscles") or []) or "your workout"
   planned = _ex_phrase(p.get("planned") or [])
   if not planned:
-    return (
-      f"Alright, {label} day. Looks like your saved plan is empty — "
-      "say 'add' followed by exercise names, then 'start workout' when you're set."
-    )
-  return (
-    f"Alright, {label} day. Your usual lineup is {planned}. "
-    "Want to keep it, or add, remove, or swap something before we start?"
-  )
+    empties = [
+      f"Alright, {label} day. Your saved plan is empty — say 'add' then exercise names, and 'start workout' when you're set.",
+      f"Okay, {label} day. Hmm, nothing saved yet — toss in some exercises with 'add', then say 'start workout'.",
+      f"Yeah, {label} day. Looks empty for now — add a few exercises and we'll roll.",
+    ]
+    return random.choice(empties)
+  variants = [
+    f"Alright, {label} day. Your usual is {planned}. Wanna swap anything, or just start the workout?",
+    f"Okay so, {label} day. You've got {planned}. Swap something, or just hit start?",
+    f"Yeah, {label} day. Your lineup is {planned}. Wanna swap one out, or shall we just start?",
+    f"Cool, {label} day. Usual is {planned}. Anything you wanna swap, or start it up?",
+    f"Got it — {label} day. Plan's {planned}. Wanna change anything, or just go?",
+    f"Right, {label} day. Your usual: {planned}. Swap something, or just start?",
+  ]
+  return random.choice(variants)
 
 
 @_t("workout_already_active")
@@ -1135,7 +1143,7 @@ def _t_voice_error(_p):
 SAY_INSTRUCTIONS: Dict[str, str] = {
   "wake_greeting": "User just woke you up. Greet them warmly and ask what we're training today.",
   "flow_start_prompt": "User asked to start a workout but hasn't picked muscles yet. Ask which muscles in a friendly way.",
-  "muscles_chosen": "User picked one or more muscles for today. Confirm warmly, read their saved plan exercises naturally (NOT numbered), and ask if they want to keep it, add, remove, or swap something before starting.",
+  "muscles_chosen": "User picked one or more muscles for today. Confirm warmly, read their saved plan exercises naturally (NOT numbered), then ask ONE simple question: do they want to swap anything, or just start the workout. Vary the wording each time. Do NOT say 'add, remove, or swap'.",
   "workout_already_active": "User tried to start a new workout, but one is already active. Tell them gently and offer to end the current one first.",
   "workout_started": "Workout has just begun. Briefly hype them up; mention how many exercises are queued if greater than zero.",
   "workout_saved": "Workout just ended and was saved. Brief congrats.",
@@ -1207,7 +1215,7 @@ async def call_gemini_say(kind: str, payload: Dict[str, Any], default_text: str)
   )
   body = {
     "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-    "generationConfig": {"temperature": 0.8, "maxOutputTokens": 120},
+    "generationConfig": {"temperature": 1.0, "maxOutputTokens": 120, "topP": 0.95},
   }
   try:
     async with httpx.AsyncClient(timeout=8) as client:

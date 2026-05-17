@@ -217,6 +217,8 @@ const state = {
   sttSource: USE_DEEPGRAM_STT ? "deepgram" : "browser",
   /** Bumped each processCommand — aborts TTS/play from older dispatches after interrupt */
   dispatchGeneration: 0,
+  /** When non-null, waiting for weight/reps (or exercise) to finish a "log a set" flow. */
+  pendingLog: null,
 };
 
 function seedMockDataIfNeeded() {
@@ -410,6 +412,7 @@ function discardActiveWorkout(cmdGen = null) {
   state.phase = "idle";
   state.pendingMuscles = [];
   state.pendingPlanned = [];
+  state.pendingLog = null;
   state.saveCustomAsRegular = false;
   clearCompareView();
   persist();
@@ -590,27 +593,21 @@ function renderTrainerExerciseCards() {
     .slice(0, 6)
     .map((exercise) => {
       const matches = (session.entries || []).filter((entry) => normalizeExercise(entry.exercise) === exercise);
-      const latest = matches[matches.length - 1];
-      const sets = matches.length ? String(matches.length) : "--";
-      const weight = latest ? `${latest.weight} ${WEIGHT_UNIT}` : "--";
-      const reps = latest ? `${latest.reps}` : "--";
+      const setRows = matches.length
+        ? matches
+            .map(
+              (entry, i) => `
+          <li class="set-row">
+            <span class="set-row-label">Set ${i + 1}</span>
+            <span class="set-row-value">${entry.weight} ${WEIGHT_UNIT} × ${entry.reps} reps</span>
+          </li>`
+            )
+            .join("")
+        : `<li class="set-row set-row-empty"><span class="set-row-label">Sets</span><span class="set-row-value">None logged yet</span></li>`;
       return `
         <article class="exercise-card">
           <p class="exercise-name">${formatExerciseLabel(exercise)}</p>
-          <div class="exercise-fields">
-            <div class="exercise-field">
-              <span class="exercise-field-label">Weight</span>
-              <span class="exercise-field-value">${weight}</span>
-            </div>
-            <div class="exercise-field">
-              <span class="exercise-field-label">Reps</span>
-              <span class="exercise-field-value">${reps}</span>
-            </div>
-            <div class="exercise-field">
-              <span class="exercise-field-label">Sets</span>
-              <span class="exercise-field-value">${sets}</span>
-            </div>
-          </div>
+          <ol class="set-rows">${setRows}</ol>
         </article>
       `;
     })
@@ -882,6 +879,20 @@ const SPOKEN_COUNT_WORDS = {
 };
 const SPOKEN_COUNT_PATTERN = Object.keys(SPOKEN_COUNT_WORDS).join("|");
 
+/** "first set", "second set" → 1-based index (edit commands). */
+const SET_ORDINAL_WORDS = {
+  first: 1,
+  second: 2,
+  third: 3,
+  fourth: 4,
+  fifth: 5,
+  sixth: 6,
+  seventh: 7,
+  eighth: 8,
+  ninth: 9,
+  tenth: 10,
+};
+
 /** @param {"rep"|"set"} unit */
 function parseSpelledOrDigitUnit(t, unit) {
   const u = unit === "rep" ? "reps?" : "sets?";
@@ -893,6 +904,53 @@ function parseSpelledOrDigitUnit(t, unit) {
     if (Number.isFinite(n) && n > 0) return n;
   }
   return null;
+}
+
+/**
+ * Parses a whole number for set/rep edit phrases ("to 4", "to four", "five sets").
+ * Digit patterns win; spelled numbers use {@link SPOKEN_COUNT_WORDS}.
+ */
+function parseSetsRepsEditInteger(inputRaw) {
+  const input = inputRaw.toLowerCase().trim();
+
+  const notPattern = input.match(/(\d+)\s*(?:sets?|reps?)?\s*(?:not|instead of)\s*\d+/i);
+  if (notPattern) {
+    const n = Number(notPattern[1]);
+    if (Number.isFinite(n)) return n;
+  }
+
+  let m = input.match(/(?:to|it's|its|it is|=)\s*(\d+)\s*(?:sets?|reps?)?\b/i);
+  if (m) {
+    const n = Number(m[1]);
+    if (Number.isFinite(n)) return n;
+  }
+  m = input.match(
+    new RegExp(`(?:to|it's|its|it is|=)\\s+(${SPOKEN_COUNT_PATTERN})(?:\\s*(?:sets?|reps?))?\\b`, "i")
+  );
+  if (m) {
+    const n = SPOKEN_COUNT_WORDS[m[1].toLowerCase()];
+    if (Number.isFinite(n)) return n;
+  }
+
+  const digitRuns = [...input.matchAll(/(\d+)\s*(?:sets?|reps?)/gi)];
+  if (digitRuns.length) return Number(digitRuns[digitRuns.length - 1][1]);
+
+  const wordRuns = [
+    ...input.matchAll(new RegExp(`\\b(${SPOKEN_COUNT_PATTERN})\\s*(?:sets?|reps?)\\b`, "gi")),
+  ];
+  if (wordRuns.length) {
+    const n = SPOKEN_COUNT_WORDS[wordRuns[wordRuns.length - 1][1].toLowerCase()];
+    if (Number.isFinite(n)) return n;
+  }
+
+  m = input.match(/(?:to|it's|its|it is|=)\s*(\d+)\b/i);
+  if (m) return Number(m[1]);
+  m = input.match(new RegExp(`(?:to|it's|its|it is|=)\\s+(${SPOKEN_COUNT_PATTERN})\\b`, "i"));
+  if (m) {
+    const n = SPOKEN_COUNT_WORDS[m[1].toLowerCase()];
+    if (Number.isFinite(n)) return n;
+  }
+  return NaN;
 }
 
 function parseLog(text) {
@@ -916,6 +974,220 @@ function parseLog(text) {
     reps: Number(repsN ?? 10),
     sets: Number(setsN ?? 1),
   };
+}
+
+function extractWeightKgFromText(t) {
+  const m = String(t).match(/(\d+(?:\.\d+)?)\s*(kg|kgs?)\b/i);
+  return m ? Number(m[1]) : null;
+}
+
+/** Reps with explicit "reps" word or spoken number before "reps". */
+function extractRepsFromText(t) {
+  const s = String(t);
+  const digit = s.match(/(\d+)\s*reps?\b/i);
+  if (digit) return Number(digit[1]);
+  const w = s.match(new RegExp(`\\b(${SPOKEN_COUNT_PATTERN})\\s*reps?\\b`, "i"));
+  if (w) {
+    const n = SPOKEN_COUNT_WORDS[w[1].toLowerCase()];
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return null;
+}
+
+/**
+ * After a kg value, allow a bare integer as reps (e.g. "35 kg 8" or "35 kilos for 8").
+ */
+function extractRepsLoose(t) {
+  const explicit = extractRepsFromText(t);
+  if (explicit != null) return explicit;
+  const m = String(t).match(/(\d+(?:\.\d+)?)\s*(?:kg|kgs?|kilos?)\b[^0-9]{0,12}(\d+)\b/i);
+  if (m) return Number(m[2]);
+  return null;
+}
+
+function extractExerciseFromLogFragment(raw) {
+  let t = String(raw).toLowerCase().replace(/\s+/g, " ").trim();
+  t = t.replace(/\b(log|add)\s+another\s+set\b/gi, " ");
+  t = t.replace(/\b(log|add)\s+(a|an|one|the)?\s*set\b/gi, " ");
+  t = t.replace(/^(for|on|with|of)\s+/i, " ");
+  t = t.replace(/(\d+(?:\.\d+)?)\s*(kg|kgs?|kilos?)\b/gi, " ");
+  t = t.replace(/\b(\d+)\s*reps?\b/gi, " ");
+  t = t.replace(new RegExp(`\\b(${SPOKEN_COUNT_PATTERN})\\s*reps?\\b`, "gi"), " ");
+  t = t.replace(/\b(at|@)\s+/gi, " ");
+  t = t.replace(/\s+/g, " ").trim();
+  if (!t) return "";
+  return normalizeExercise(t);
+}
+
+function lastLoggedExerciseForSession() {
+  const e = state.activeSession?.entries;
+  if (!e?.length) return "";
+  return normalizeExercise(e[e.length - 1].exercise);
+}
+
+function inferExerciseForAnotherSet() {
+  const last = lastLoggedExerciseForSession();
+  if (last) return last;
+  const p = state.activeSession?.planned;
+  if (Array.isArray(p) && p.length) return normalizeExercise(p[0]);
+  return "";
+}
+
+function clearPendingLog() {
+  state.pendingLog = null;
+  if (state.phase === "awaiting_log_details") state.phase = "idle";
+}
+
+async function beginPendingLog(exerciseHint, cmdGen) {
+  state.pendingLog = { exercise: exerciseHint || "" };
+  state.phase = "awaiting_log_details";
+  const hint = exerciseHint ? formatExerciseLabel(exerciseHint) : "your lift";
+  await speak(
+    "log_awaiting_details",
+    { exercise: exerciseHint || null },
+    exerciseHint
+      ? `Got it — ${hint}. What weight and reps for that set?`
+      : `Sure — which exercise, and what weight and reps?`,
+    cmdGen
+  );
+}
+
+async function handleAwaitingLogDetails(input, cmdGen) {
+  const pending = state.pendingLog;
+  if (!pending) {
+    state.phase = "idle";
+    return;
+  }
+
+  if (/\b(cancel|never\s*mind|forget\s*it)\b/i.test(input)) {
+    clearPendingLog();
+    await respond("Okay — cancelled that log.", null, cmdGen);
+    return;
+  }
+
+  if (isBriefSocialAcknowledgement(input)) {
+    clearPendingLog();
+    await replySocialAck(cmdGen);
+    return;
+  }
+
+  const full = parseLog(input);
+  if (full) {
+    const ex = normalizeExercise(full.exercise);
+    if (pending.exercise && ex && ex !== pending.exercise) {
+      await speak(
+        "log_mismatch_exercise",
+        { expected: pending.exercise, got: ex },
+        `I was waiting for ${formatExerciseLabel(pending.exercise)} — say cancel or give me weight and reps for that one.`,
+        cmdGen
+      );
+      return;
+    }
+    clearPendingLog();
+    logSet({ ...full, sets: 1 }, cmdGen);
+    return;
+  }
+
+  const w = extractWeightKgFromText(input);
+  const r = extractRepsLoose(input);
+  let ex = pending.exercise ? normalizeExercise(pending.exercise) : "";
+
+  if (!ex) {
+    ex = extractExerciseFromLogFragment(input);
+  }
+
+  if (w != null && r != null && ex) {
+    clearPendingLog();
+    logSet({ exercise: ex, weight: w, reps: r, sets: 1 }, cmdGen);
+    return;
+  }
+
+  if (w != null && r == null) {
+    await respond(`Got ${w} ${WEIGHT_UNIT} — how many reps?`, null, cmdGen);
+    return;
+  }
+  if (r != null && w == null) {
+    await respond(`Got ${r} reps — what weight in ${WEIGHT_UNIT}?`, null, cmdGen);
+    return;
+  }
+
+  await respond(
+    "Say something like '20 kilos for 8 reps', or cancel.",
+    null,
+    cmdGen
+  );
+}
+
+async function handleLogSetIntentStart(input, cmdGen) {
+  const t = input.toLowerCase();
+  const w = extractWeightKgFromText(t);
+  const r = extractRepsLoose(t);
+  let ex = extractExerciseFromLogFragment(input);
+
+  if (ex && w != null && r != null) {
+    logSet({ exercise: ex, weight: w, reps: r, sets: 1 }, cmdGen);
+    return;
+  }
+
+  if (ex && w != null && r == null) {
+    state.pendingLog = { exercise: ex };
+    state.phase = "awaiting_log_details";
+    await respond(`Got ${formatExerciseLabel(ex)} at ${w} ${WEIGHT_UNIT} — how many reps?`, null, cmdGen);
+    return;
+  }
+
+  if (ex && w == null && r != null) {
+    state.pendingLog = { exercise: ex };
+    state.phase = "awaiting_log_details";
+    await respond(`Got ${formatExerciseLabel(ex)} for ${r} reps — what weight in ${WEIGHT_UNIT}?`, null, cmdGen);
+    return;
+  }
+
+  if (ex) {
+    await beginPendingLog(ex, cmdGen);
+    return;
+  }
+
+  await beginPendingLog("", cmdGen);
+}
+
+async function handleLogAnotherSet(input, cmdGen) {
+  const t = input.toLowerCase();
+  const w = extractWeightKgFromText(t);
+  const r = extractRepsLoose(t);
+  const ex = inferExerciseForAnotherSet();
+
+  if (!ex) {
+    await speak(
+      "log_another_no_context",
+      {},
+      "Log your first set with the exercise name, then you can say 'log another set' with just weight and reps.",
+      cmdGen
+    );
+    return;
+  }
+
+  if (w != null && r != null) {
+    clearPendingLog();
+    logSet({ exercise: ex, weight: w, reps: r, sets: 1 }, cmdGen);
+    return;
+  }
+
+  state.pendingLog = { exercise: ex };
+  state.phase = "awaiting_log_details";
+  if (w != null) {
+    await respond(`Another set of ${formatExerciseLabel(ex)} at ${w} ${WEIGHT_UNIT} — how many reps?`, null, cmdGen);
+    return;
+  }
+  if (r != null) {
+    await respond(`Another set of ${formatExerciseLabel(ex)} for ${r} reps — what weight in ${WEIGHT_UNIT}?`, null, cmdGen);
+    return;
+  }
+  await respond(
+    `Another set of ${formatExerciseLabel(ex)} — what weight and reps?`,
+    null,
+    cmdGen
+  );
 }
 
 function normalizeExercise(name) {
@@ -949,9 +1221,22 @@ function promptUsualOrChangeForMuscles(muscles, cmdGen = null) {
   state.phase = "awaiting_plan_adjustment";
   const label = muscles.join(" and ");
   const planned = state.pendingPlanned.slice();
-  const fallback = planned.length
-    ? `Alright, ${label} day. Your usual lineup is ${planned.map(formatExerciseLabel).join(", ")}. Want to keep it, or add, remove, or swap something before we start?`
-    : `Alright, ${label} day. Your saved plan is empty — say "add" followed by exercise names, then "start workout" when you're set.`;
+  const list = planned.map(formatExerciseLabel).join(", ");
+  const variants = planned.length
+    ? [
+        `Alright, ${label} day. Your usual is ${list}. Wanna swap anything, or just start the workout?`,
+        `Okay so, ${label} day. You've got ${list}. Swap something, or just hit start?`,
+        `Yeah, ${label} day. Your lineup is ${list}. Wanna swap one out, or shall we just start?`,
+        `Cool, ${label} day. Usual is ${list}. Anything you wanna swap, or start it up?`,
+        `Got it — ${label} day. Plan's ${list}. Wanna change anything, or just go?`,
+        `Right, ${label} day. Your usual: ${list}. Swap something, or just start?`,
+      ]
+    : [
+        `Alright, ${label} day. Your saved plan is empty — say "add" then exercise names, and "start workout" when you're set.`,
+        `Okay, ${label} day. Hmm, nothing saved yet — toss in some exercises with "add", then say "start workout".`,
+        `Yeah, ${label} day. Looks empty for now — add a few exercises and we'll roll.`,
+      ];
+  const fallback = variants[Math.floor(Math.random() * variants.length)];
   void speak("muscles_chosen", { muscles, planned }, fallback, cmdGen);
 }
 
@@ -967,6 +1252,7 @@ function startFlow(cmdGen = null) {
   }
   clearCompareView();
   state.phase = "awaiting_muscles";
+  state.pendingLog = null;
   state.saveCustomAsRegular = false;
   renderTrainerExerciseCards();
   void speak(
@@ -990,6 +1276,7 @@ function createSession(muscles, planned, usingUsual, cmdGen = null) {
   state.phase = "idle";
   state.pendingMuscles = [];
   state.pendingPlanned = [];
+  state.pendingLog = null;
   state.saveCustomAsRegular = false;
   persist();
   renderStatus();
@@ -1017,6 +1304,7 @@ function endSession(cmdGen = null) {
   state.phase = "idle";
   state.pendingMuscles = [];
   state.pendingPlanned = [];
+  state.pendingLog = null;
   clearCompareView();
   persist();
   renderHome();
@@ -1037,31 +1325,28 @@ function logSet(parsed, cmdGen = null) {
     };
   }
   const exercise = normalizeExercise(parsed.exercise);
-  for (let i = 0; i < parsed.sets; i += 1) {
-    state.activeSession.entries.push({
-      id: uid(),
-      exercise,
-      weight: parsed.weight,
-      reps: parsed.reps,
-      createdAt: new Date().toISOString(),
-    });
-  }
+  state.activeSession.entries.push({
+    id: uid(),
+    exercise,
+    weight: parsed.weight,
+    reps: parsed.reps,
+    createdAt: new Date().toISOString(),
+  });
+  const setNo = state.activeSession.entries.filter((e) => normalizeExercise(e.exercise) === exercise).length;
   persist();
   renderStatus();
   renderHome();
   renderTrainerExerciseCards();
   const niceName = formatExerciseLabel(exercise);
-  const fallback =
-    parsed.sets === 1
-      ? `Got it — ${niceName} at ${parsed.weight} ${WEIGHT_UNIT} for ${parsed.reps}. Nice work.`
-      : `Got it — ${parsed.sets} sets of ${niceName} at ${parsed.weight} ${WEIGHT_UNIT} for ${parsed.reps}. Keep it up.`;
+  const fallback = `Got it — ${niceName}, set ${setNo}: ${parsed.weight} ${WEIGHT_UNIT} for ${parsed.reps} reps. Nice work.`;
   void speak(
     "set_logged",
     {
       exercise,
       weight: parsed.weight,
       reps: parsed.reps,
-      sets: parsed.sets,
+      sets: 1,
+      setNumber: setNo,
       unit: WEIGHT_UNIT,
     },
     fallback,
@@ -1073,20 +1358,106 @@ function extractSetCorrectionCount(input) {
   const t = input.toLowerCase().trim();
   if (!/\b(edit|change|correct|fix|update)\b/.test(t)) return null;
   if (!/\b(set|sets|set count|number of sets)\b/.test(t)) return null;
-  const notPattern = t.match(/(\d+)\s*sets?\s*(?:not|instead of)\s*\d+/i);
-  if (notPattern) return Number(notPattern[1]);
-  const direct = t.match(/(?:to|it's|its|it is)\s*(\d+)\s*sets?/i);
-  if (direct) return Number(direct[1]);
-  const withSets = [...t.matchAll(/(\d+)\s*sets?/gi)];
-  if (withSets.length) return Number(withSets[withSets.length - 1][1]);
-  const plain = t.match(/(?:to|it's|its|it is)\s*(\d+)\b/i);
-  if (plain) return Number(plain[1]);
+  const parsed = parseSetsRepsEditInteger(t);
+  if (Number.isFinite(parsed) && parsed > 0) return Math.floor(parsed);
   return null;
+}
+
+function parseSetOrdinalFromFragment(fragment) {
+  const s = String(fragment).toLowerCase().trim();
+  let m = s.match(/^set\s*#?\s*(\d{1,2})$/i);
+  if (m) return Number(m[1]);
+  m = s.match(/^(\d{1,2})(st|nd|rd|th)$/i);
+  if (m) return Number(m[1]);
+  m = s.match(/^(first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth)$/i);
+  if (m) return SET_ORDINAL_WORDS[m[1].toLowerCase()];
+  const wm = s.match(new RegExp(`^(${SPOKEN_COUNT_PATTERN})$`, "i"));
+  if (wm) {
+    const n = SPOKEN_COUNT_WORDS[wm[1].toLowerCase()];
+    if (Number.isFinite(n) && n >= 1 && n <= 20) return n;
+  }
+  return null;
+}
+
+function looksLikeSetOrdinalFragment(fragment) {
+  return parseSetOrdinalFromFragment(fragment) != null;
+}
+
+/** 1-based set index within an exercise (e.g. Set 2 = second row for that lift). */
+function extractSetOrdinalFromEditInput(input) {
+  const t = String(input).toLowerCase();
+  let m = t.match(/\b(\d{1,2})(st|nd|rd|th)\s+set\b/i);
+  if (m) return Number(m[1]);
+  m = t.match(/\bset\s*#?\s*(\d{1,2})\b/i);
+  if (m) return Number(m[1]);
+  m = t.match(/\b(first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth)\s+set\b/i);
+  if (m) return SET_ORDINAL_WORDS[m[1].toLowerCase()];
+  m = t.match(new RegExp(`\\b(${SPOKEN_COUNT_PATTERN})\\s+set\\b`, "i"));
+  if (m) {
+    const n = SPOKEN_COUNT_WORDS[m[1].toLowerCase()];
+    if (Number.isFinite(n) && n >= 1 && n <= 20) return n;
+  }
+  return null;
+}
+
+function findRunForExerciseSetIndex(entries, exerciseKey, setIndex) {
+  if (!entries.length || !exerciseKey || !setIndex || setIndex < 1) return null;
+  const positions = [];
+  for (let i = 0; i < entries.length; i += 1) {
+    if (normalizeExercise(entries[i].exercise) === exerciseKey) positions.push(i);
+  }
+  if (positions.length < setIndex) return null;
+  const idx = positions[setIndex - 1];
+  const pivot = entries[idx];
+  return { start: idx, end: idx, pivot, count: 1 };
+}
+
+/** When user says "set 2" without naming the lift, pick a recent exercise that has at least that many logged rows. */
+function inferExerciseForSetEdit(entries, setIndex) {
+  if (!entries.length || !setIndex || setIndex < 1) return "";
+  const seen = new Set();
+  for (let i = entries.length - 1; i >= 0; i -= 1) {
+    const ex = normalizeExercise(entries[i].exercise);
+    if (seen.has(ex)) continue;
+    seen.add(ex);
+    const n = entries.filter((e) => normalizeExercise(e.exercise) === ex).length;
+    if (n >= setIndex) return ex;
+  }
+  const last = entries[entries.length - 1];
+  return last ? normalizeExercise(last.exercise) : "";
 }
 
 function extractEditInstruction(inputRaw) {
   const input = inputRaw.toLowerCase().trim();
   if (!/\b(edit|change|correct|fix|update)\b/.test(input)) return null;
+
+  let setIndex = extractSetOrdinalFromEditInput(input);
+  let exerciseTarget = null;
+
+  const combinedIn = input.match(/\bin\s+(.+?)\s+set\s*#?\s*(\d{1,2})\s+\b(?:to|it's|its|it is|not|instead of)\b/i);
+  if (combinedIn) {
+    exerciseTarget = normalizeExercise(combinedIn[1].trim());
+    const sn = Number(combinedIn[2]);
+    if (Number.isFinite(sn) && sn > 0) setIndex = sn;
+  } else {
+    const forSet = input.match(/\bfor\s+(.+?)\s+set\s*#?\s*(\d{1,2})\s+\b(?:to|it's|its|it is|not|instead of)\b/i);
+    if (forSet) {
+      exerciseTarget = normalizeExercise(forSet[1].trim());
+      const sn = Number(forSet[2]);
+      if (Number.isFinite(sn) && sn > 0) setIndex = sn;
+    } else {
+      const exerciseTargetMatch = input.match(/\bin\s+(.+?)\s+\b(?:to|it's|its|it is|not|instead of)\b/i);
+      if (exerciseTargetMatch) {
+        const raw = exerciseTargetMatch[1].trim();
+        if (looksLikeSetOrdinalFragment(raw)) {
+          const sn = parseSetOrdinalFromFragment(raw);
+          if (sn != null) setIndex = sn;
+        } else {
+          exerciseTarget = normalizeExercise(raw);
+        }
+      }
+    }
+  }
 
   const weightKeywords =
     /\b(weight|kg|kgs|kilo|kilos|pounds?|lbs?)\b/.test(input) ||
@@ -1094,15 +1465,11 @@ function extractEditInstruction(inputRaw) {
   const hasMassUnit = /\b(kg|kgs|kilo|kilos|lb|lbs|pounds?)\b/.test(input);
   const setsLike = /\b(set|sets|set count|number of sets)\b/.test(input);
   const repsLike = /\b(rep|reps|repetition|repetitions)\b/.test(input);
-  // Reps first; then weight (any mass unit beats a bare "set" token, e.g. "change set to 10 kgs").
   let field = null;
   if (repsLike) field = "reps";
   else if (weightKeywords || hasMassUnit) field = "weight";
   else if (setsLike) field = "sets";
   if (!field) return null;
-
-  const exerciseTargetMatch = input.match(/\bin\s+(.+?)\s+\b(?:to|it's|its|it is|not|instead of)\b/i);
-  const exerciseTarget = exerciseTargetMatch ? normalizeExercise(exerciseTargetMatch[1]) : null;
 
   let value = null;
   if (field === "weight") {
@@ -1114,16 +1481,10 @@ function extractEditInstruction(inputRaw) {
       if (any.length) value = Number(any[any.length - 1][1]);
     }
   } else {
-    const notPattern = input.match(/(\d+)\s*(?:sets?|reps?)?\s*(?:not|instead of)\s*\d+/i);
-    const direct = input.match(/(?:to|it's|its|it is)\s*(\d+)\s*(?:sets?|reps?)?/i);
-    value = Number((notPattern && notPattern[1]) || (direct && direct[1]));
-    if (!Number.isFinite(value)) {
-      const any = [...input.matchAll(/(\d+)\s*(?:sets?|reps?)?/gi)];
-      if (any.length) value = Number(any[any.length - 1][1]);
-    }
+    value = parseSetsRepsEditInteger(input);
   }
   if (!Number.isFinite(value)) return null;
-  return { field, value, exerciseTarget };
+  return { field, value, exerciseTarget, setIndex: setIndex ?? null };
 }
 
 function findLatestEditableRun(entries, exerciseTarget = null) {
@@ -1231,13 +1592,24 @@ async function applyEditInstruction(edit, cmdGen = null) {
     return;
   }
 
-  const run = findLatestEditableRun(entries, edit.exerciseTarget);
+  let run = null;
+  const setIx = edit.setIndex;
+  if (Number.isFinite(setIx) && setIx >= 1) {
+    const exGuess =
+      (edit.exerciseTarget && normalizeExercise(edit.exerciseTarget)) ||
+      inferExerciseForSetEdit(entries, setIx);
+    if (exGuess) run = findRunForExerciseSetIndex(entries, exGuess, setIx);
+  }
+  if (!run) run = findLatestEditableRun(entries, edit.exerciseTarget);
   if (!run) {
     const target = edit.exerciseTarget ? formatExerciseLabel(edit.exerciseTarget) : "that exercise";
+    const ordinalFail = Number.isFinite(setIx) && setIx >= 1;
     await speak(
       "set_edit_not_found",
       { exercise: target },
-      `Hmm, I couldn't find ${target} in your recent logged sets.`,
+      ordinalFail
+        ? `Hmm, I couldn't find set ${setIx} for that exercise in your log.`
+        : `Hmm, I couldn't find ${target} in your recent logged sets.`,
       cmdGen
     );
     return;
@@ -1376,7 +1748,15 @@ async function applyEditInstruction(edit, cmdGen = null) {
 }
 
 async function handlePhase(input, cmdGen) {
+  if (state.phase === "awaiting_log_details") {
+    await handleAwaitingLogDetails(input, cmdGen);
+    return;
+  }
   if (state.phase === "awaiting_muscles") {
+    if (isBriefSocialAcknowledgement(input)) {
+      await replySocialAck(cmdGen);
+      return;
+    }
     const muscles = extractMuscles(input);
     if (!muscles.length) {
       const reply = await answerCoach(input);
@@ -1392,6 +1772,10 @@ async function handlePhase(input, cmdGen) {
     return;
   }
   if (state.phase === "awaiting_plan_adjustment") {
+    if (isBriefSocialAcknowledgement(input)) {
+      await replySocialAck(cmdGen);
+      return;
+    }
     if (/\b(start|begin|go|done)\b/i.test(input)) {
       const planned = state.pendingPlanned.slice();
       if (!planned.length) {
@@ -1601,6 +1985,50 @@ function sttStreamUrl() {
   return `${proto}//${window.location.host}${STT_STREAM_PATH}`;
 }
 
+function normalizeTrainerInput(raw) {
+  return String(raw || "")
+    .normalize("NFKC")
+    .replace(/[\u2018\u2019`\u2032]/g, "'")
+    .replace(/^[\s"'\u201c\u201d]+/u, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+/** Short thanks / dismissal lines so they aren't mistaken for unsupported commands or plan prompts. */
+function isBriefSocialAcknowledgement(raw) {
+  const s = normalizeTrainerInput(raw);
+  if (s.length < 2 || s.length > 100) return false;
+  const compact = s.replace(/\s+/g, " ");
+  const tests = [
+    /^no+[,.]?\s+(that'?s|thats|that is)\s+fine\b/,
+    /^no+[,.]?\s+(thanks|thank you|thx)\b/,
+    /^(that'?s|thats|that is)\s+fine\b/,
+    /^(nah|nope)([,.]|\s)+((that'?s|thats|that is)\s+fine|thanks|thank you)\b/,
+    /^(yeah|yep|okay|ok|sure)[,.]?\s+((that'?s|thats)\s+fine|thanks|thank you)\b/,
+    /^(thanks|thank you|thx|cheers|much appreciated)(\s+so\s+much|\s+a\s+lot)?[!.?]*$/,
+    /^(all good|totally good|we'?re good|sounds good|looks good|perfect|got it|cool|nice one)\b/,
+    /^no\s+worries\b/,
+    /^no\s+(problem|big deal)\b/,
+    /^i'?m\s+good\b/,
+    /^(okay|ok|sure)\b[,.\s]+(cool|good|great)([!.?]|$)/,
+  ];
+  return tests.some((re) => re.test(compact));
+}
+
+const SOCIAL_ACK_REPLIES = [
+  "Cool — I'm right here when you need me.",
+  "Sounds good. Say a muscle to start, or ask me anything.",
+  "Got it. Whenever you're ready, just shout.",
+  "Nice — holler when you want to pick up.",
+  "Alright — just give me the word.",
+];
+
+async function replySocialAck(cmdGen) {
+  const line = SOCIAL_ACK_REPLIES[Math.floor(Math.random() * SOCIAL_ACK_REPLIES.length)];
+  await respond(line, null, cmdGen);
+}
+
 /**
  * Command bus: each handler declares when it matches and performs an action.
  * Returning true means "handled", false means continue to next handler.
@@ -1613,6 +2041,7 @@ function createCommandHandlers() {
       run: async ({ cmdGen }) => {
         state.jarvisAwake = true;
         state.phase = "idle";
+        state.pendingLog = null;
         await speak("wake_greeting", {}, JARVIS_WAKE_REPLY, cmdGen);
       },
     },
@@ -1651,13 +2080,10 @@ function createCommandHandlers() {
       },
     },
     {
-      name: "casual_acknowledgement",
-      match: ({ input }) =>
-        /^(no(pe)?|nah|no that's fine|no thats fine|that's fine|thats fine|all good|we're good|we are good)\b/i.test(
-          input.trim()
-        ),
+      name: "social_acknowledgement",
+      match: ({ input }) => isBriefSocialAcknowledgement(input),
       run: async ({ cmdGen }) => {
-        await speak("unknown_help", {}, "Okay, no problem.", cmdGen);
+        await replySocialAck(cmdGen);
       },
     },
     {
@@ -1676,6 +2102,24 @@ function createCommandHandlers() {
         const edit = extractEditInstruction(input);
         if (!edit) return;
         await applyEditInstruction(edit, cmdGen);
+      },
+    },
+    {
+      name: "log_another_set",
+      match: ({ lowerInput }) => /\b(log|add)\s+another\s+set\b/i.test(lowerInput),
+      run: async ({ input, cmdGen }) => {
+        await handleLogAnotherSet(input, cmdGen);
+      },
+    },
+    {
+      name: "log_a_set_intent",
+      match: ({ input, lowerInput }) =>
+        state.phase === "idle" &&
+        /\b(log|add)\s+(a|an|one|the)?\s*set\b/i.test(lowerInput) &&
+        !/\b(log|add)\s+another\s+set\b/i.test(lowerInput) &&
+        !parseLog(input),
+      run: async ({ input, cmdGen }) => {
+        await handleLogSetIntentStart(input, cmdGen);
       },
     },
     {
@@ -1762,7 +2206,7 @@ function createCommandHandlers() {
       run: async ({ input, cmdGen }) => {
         const parsed = parseLog(input);
         if (!parsed) return;
-        logSet(parsed, cmdGen);
+        logSet({ ...parsed, sets: 1 }, cmdGen);
       },
     },
     {
@@ -1822,7 +2266,7 @@ async function processCommand(inputRaw) {
   await speak(
     "unknown_help",
     {},
-    "Hmm, I didn't quite catch that. You can name a muscle to start, log a set like 'log bench 60 kilos for 8', or just ask me anything about training.",
+    "Hmm, I didn't quite catch that. Try 'log a set' then your weight and reps, 'log another set' for the same lift, or name a muscle to start.",
     cmdGen
   );
 }

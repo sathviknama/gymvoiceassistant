@@ -505,6 +505,44 @@ textarea {
   font-weight: 600;
 }
 
+.set-rows {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.set-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  background: #0b1220;
+  padding: 8px 10px;
+  font-size: 0.82rem;
+}
+
+.set-row-empty .set-row-value {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.set-row-label {
+  color: #94a3b8;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.set-row-value {
+  color: #cbd5e1;
+  font-weight: 600;
+  text-align: right;
+}
+
 .exercise-fields {
   margin-top: 8px;
   display: grid;
